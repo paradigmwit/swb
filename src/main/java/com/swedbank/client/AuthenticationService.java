@@ -12,8 +12,10 @@ import com.swedbank.client.model.response.AuthenticationMethodsResponse;
 import java.io.IOException;
 import java.net.http.HttpHeaders;
 import java.net.http.HttpResponse;
-import java.util.*;
-import java.util.regex.Pattern;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class AuthenticationService {
@@ -24,15 +26,37 @@ public class AuthenticationService {
     public static Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
 
-    public boolean authenticate(String mobileBankId) throws IOException, InterruptedException, AuthenticatorNotFoundException {
+    public void authenticationMethods() throws IOException, InterruptedException {
         //Session Cookies
         clientSession();
         System.out.println("\nSession created with ID - " + jSessionID);
 
-        //Authentication Methods
         getAuthenticationMethods();
         printAuthenticationMethods();
+    }
 
+    private void getAuthenticationMethods() throws IOException, InterruptedException {
+        System.out.println("\nFetching Authentication Methods");
+
+        HttpResponse<String> response = HttpHelper.get(Constants.IDENTIFICATION_ENDPOINT_V5, getHeaderMap());
+        authenticationMethods = gson.fromJson(response.body(), AuthenticationMethodsResponse.class);
+        //System.out.println(authenticationMethods.toString());
+    }
+
+
+    private void printAuthenticationMethods() {
+        int counter = 1;
+        System.out.println("\nAvailable Authentication Methods");
+        System.out.println("-------------------------------------------------------");
+        for(AuthenticationMethod authenticationMethod: authenticationMethods.getAuthenticationMethods()) {
+            System.out.println(counter + ".\t" + authenticationMethod.getMessage());
+            counter++;
+        }
+        System.out.println("-------------------------------------------------------");
+
+    }
+
+    public boolean authenticate(String mobileBankId) throws IOException, InterruptedException, AuthenticatorNotFoundException {
         //mobile bankid authentication
         return authenticate(Constants.AUTHENTICATOR_MOBILE_BANKID, mobileBankId);
     }
@@ -78,29 +102,10 @@ public class AuthenticationService {
                 .collect(Collectors.joining(";"))+";";
     }
 
-
-    private void getAuthenticationMethods() throws IOException, InterruptedException {
-        System.out.println("\nFetching Authentication Methods");
-
-        HttpResponse<String> response = HttpHelper.get(Constants.IDENTIFICATION_ENDPOINT_V5, getHeaderMap());
-        authenticationMethods = gson.fromJson(response.body(), AuthenticationMethodsResponse.class);
-        //System.out.println(authenticationMethods.toString());
-    }
-
-
-    private void printAuthenticationMethods() {
-        int counter = 1;
-        System.out.println("\nAvailable Authentication Methods");
-        System.out.println("-------------------------------------------------------");
-        for(AuthenticationMethod authenticationMethod: authenticationMethods.getAuthenticationMethods()) {
-            System.out.println(counter + ".\t" + authenticationMethod.getMessage());
-            counter++;
-        }
-        System.out.println("-------------------------------------------------------");
-
-    }
-
     private boolean authenticate(String authenticatorType, String mobileBankId) throws AuthenticatorNotFoundException, IOException, InterruptedException {
+
+        if( authenticationMethods==null || cookieString == null || jSessionID == null )
+            authenticationMethods();
 
         Optional<AuthenticationMethod> authenticationMethod = authenticationMethods.getAuthenticationMethods()
                 .stream().filter(a -> a.getCode().equals(authenticatorType)).findFirst();

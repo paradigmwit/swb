@@ -8,17 +8,20 @@ import java.util.regex.Pattern;
 
 public class ApiClientJavaApplication {
 
+
 	public static void main(String[] args) throws IOException, AuthenticatorNotFoundException, InterruptedException {
+
+		System.out.println("Starting SwedBank Authentication Client");
+
+		AuthenticationService authenticationService = new AuthenticationService();
+
+		authenticationService.authenticationMethods();
 
 		//reading bankid from stdin
 		String mobileBankId = readBankId();
 		//String mobileBankId = "19121212-1212";
 
-		System.out.println("\nBank id - " + mobileBankId);
-		
-		System.out.println("Starting SwedBank Authentication Client");
-
-		AuthenticationService authenticationService = new AuthenticationService();
+		System.out.println("\nStarting Mobile Bank id authentication for - " + mobileBankId);
 
 		boolean isAuthenticUser = authenticationService.authenticate(mobileBankId);
 

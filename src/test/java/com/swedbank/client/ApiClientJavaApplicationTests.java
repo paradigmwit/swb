@@ -12,6 +12,8 @@ class ApiClientJavaApplicationTests {
 
 	@Test
 	public void testApplication() throws InterruptedException, AuthenticatorNotFoundException, IOException {
+
+		authenticationService.authenticationMethods();
 		boolean isAuthentic = authenticationService.authenticate("19121212-1212");
 		Assertions.assertEquals(isAuthentic, false);
 	}
